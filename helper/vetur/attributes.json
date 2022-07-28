@@ -25,7 +25,7 @@
   },
   "vxe-table/resizable": {
     "type": "boolean",
-    "description": "所有的列是否允许拖动列宽调整大小"
+    "description": "已废弃，被 column-config.resizable 替换"
   },
   "vxe-table/stripe": {
     "type": "boolean",
@@ -65,19 +65,19 @@
   },
   "vxe-table/highlight-current-row": {
     "type": "boolean",
-    "description": "是否要高亮当前行"
+    "description": "已废弃，被 row-config.isCurrent 替换"
   },
   "vxe-table/highlight-hover-row": {
     "type": "boolean",
-    "description": "鼠标移到行是否要高亮显示"
+    "description": "已废弃，被 row-config.isHover 替换"
   },
   "vxe-table/highlight-current-column": {
     "type": "boolean",
-    "description": "是否要高亮当前列"
+    "description": "已废弃，被 column-config.isCurrent 替换"
   },
   "vxe-table/highlight-hover-column": {
     "type": "boolean",
-    "description": "鼠标移到列是否要高亮显示"
+    "description": "已废弃，被 column-config.isHover 替换"
   },
   "vxe-table/row-class-name": {
     "type": "string | (({ row, rowindex, $rowindex }) => any)",
@@ -165,15 +165,15 @@
   },
   "vxe-table/column-key": {
     "type": "boolean",
-    "description": "是否需要为每一列的 VNode 设置 key 属性（非特殊情况下不需要使用）"
+    "description": "已废弃，被 column-config.useKey 替换"
   },
   "vxe-table/row-key": {
     "type": "boolean",
-    "description": "是否需要为每一行的 VNode 设置 key 属性（非特殊情况下没必要设置）"
+    "description": "已废弃，被 row-config.useKey 替换"
   },
   "vxe-table/row-id": {
     "type": "string",
-    "description": "自定义行数据唯一主键的字段名（行数据必须要有唯一主键，默认自动生成）"
+    "description": "已废弃，被 row-config.keyField 替换"
   },
   "vxe-table/keep-source": {
     "type": "boolean",
@@ -461,7 +461,11 @@
   },
   "vxe-column/title-help": {
     "type": "any",
-    "description": "标题帮助图标配置项"
+    "description": "即将废弃，请使用 title.prefix"
+  },
+  "vxe-column/title-prefix": {
+    "type": "any",
+    "description": "标题前缀图标配置项"
   },
   "vxe-column/cell-type": {
     "type": "string",
@@ -521,7 +525,7 @@
   },
   "vxe-grid/resizable": {
     "type": "boolean",
-    "description": "所有的列是否允许拖动列宽调整大小"
+    "description": "已废弃，被 column-config.resizable 替换"
   },
   "vxe-grid/stripe": {
     "type": "boolean",
@@ -561,19 +565,19 @@
   },
   "vxe-grid/highlight-current-row": {
     "type": "boolean",
-    "description": "是否要高亮当前行"
+    "description": "已废弃，被 row-config.isCurrent 替换"
   },
   "vxe-grid/highlight-hover-row": {
     "type": "boolean",
-    "description": "鼠标移到行是否要高亮显示"
+    "description": "已废弃，被 row-config.isHover 替换"
   },
   "vxe-grid/highlight-current-column": {
     "type": "boolean",
-    "description": "是否要高亮当前列"
+    "description": "已废弃，被 column-config.isCurrent 替换"
   },
   "vxe-grid/highlight-hover-column": {
     "type": "boolean",
-    "description": "鼠标移到列是否要高亮显示"
+    "description": "已废弃，被 column-config.isHover 替换"
   },
   "vxe-grid/row-class-name": {
     "type": "string | (({ row, rowindex, $rowindex }) => any)",
@@ -661,15 +665,15 @@
   },
   "vxe-grid/column-key": {
     "type": "boolean",
-    "description": "是否需要为每一列的 VNode 设置 key 属性（非特殊情况下不需要使用）"
+    "description": "已废弃，被 column-config.useKey 替换"
   },
   "vxe-grid/row-key": {
     "type": "boolean",
-    "description": "是否需要为每一行的 VNode 设置 key 属性（非特殊情况下没必要设置）"
+    "description": "已废弃，被 row-config.useKey 替换"
   },
   "vxe-grid/row-id": {
     "type": "string",
-    "description": "自定义行数据唯一主键的字段名（行数据必须要有唯一主键，默认自动生成）"
+    "description": "已废弃，被 row-config.keyField 替换"
   },
   "vxe-grid/keep-source": {
     "type": "boolean",
@@ -951,6 +955,10 @@
     "type": "boolean",
     "description": "是否禁用"
   },
+  "vxe-radio/strict": {
+    "type": "boolean",
+    "description": "严格模式，选中后不能取消"
+  },
   "vxe-radio/name": {
     "type": "string",
     "description": "原生 name 属性"
@@ -967,6 +975,10 @@
     "type": "boolean",
     "description": "是否禁用"
   },
+  "vxe-radio-group/strict": {
+    "type": "boolean",
+    "description": "严格模式，选中后不能取消"
+  },
   "vxe-radio-button/model-value": {
     "type": "any",
     "description": "v-model 绑定值"
@@ -982,6 +994,10 @@
   "vxe-radio-button/disabled": {
     "type": "boolean",
     "description": "是否禁用"
+  },
+  "vxe-radio-button/strict": {
+    "type": "boolean",
+    "description": "严格模式，选中后不能取消"
   },
   "vxe-checkbox/model-value": {
     "type": "string | number | boolean",
@@ -1102,6 +1118,10 @@
   "vxe-input/maxlength": {
     "type": "string | number",
     "description": "原生 maxlength 属性"
+  },
+  "vxe-input/multiple": {
+    "type": "boolean",
+    "description": "只对 type=date|week|month|quarter|year 有效，是否启用多选"
   },
   "vxe-input/readonly": {
     "type": "boolean",
@@ -1255,13 +1275,17 @@
     "type": "any",
     "description": "下拉分组选项属性参数配置"
   },
+  "vxe-select/option-config": {
+    "type": "any",
+    "description": "选项配置信息"
+  },
   "vxe-select/option-id": {
     "type": "string",
-    "description": "自定义选项唯一主键的字段名（选项必须要有唯一主键，默认自动生成）"
+    "description": "已废弃，被 option-config.keyField 替换"
   },
   "vxe-select/option-key": {
     "type": "boolean",
-    "description": "是否需要为每一行的 VNode 设置 key 属性（非特殊情况下没必要设置）"
+    "description": "已废弃，被 option-config.useKey 替换"
   },
   "vxe-select/transfer": {
     "type": "boolean",
@@ -1387,7 +1411,11 @@
     "type": "boolean",
     "description": "鼠标是否可进入到 tooltip 中"
   },
-  "vxe-tooltip/leave-delay": {
+  "vxe-tooltip/enter-delay": {
+    "type": "number",
+    "description": "鼠标移入后延时多少才显示 tooltip"
+  },
+  "vxe-tooltip/leavedelay": {
     "type": "number",
     "description": "鼠标移出后延时多少才隐藏 tooltip"
   },
@@ -1647,6 +1675,14 @@
     "type": "string | number",
     "description": "标题宽度"
   },
+  "vxe-form-item/title-colon": {
+    "type": "boolean",
+    "description": "是否显示标题冒号"
+  },
+  "vxe-form-item/title-asterisk": {
+    "type": "boolean",
+    "description": "是否显示必填字段的红色星号"
+  },
   "vxe-form-item/title-overflow": {
     "type": "string | boolean",
     "description": "标题内容过长时显示为省略号"
@@ -1726,6 +1762,10 @@
   "vxe-list/scroll-y": {
     "type": "any",
     "description": "纵向虚拟滚动配置"
+  },
+  "vxe-pulldown/model-value": {
+    "type": "boolean",
+    "description": "v-model 绑定值"
   },
   "vxe-pulldown/size": {
     "type": "string",

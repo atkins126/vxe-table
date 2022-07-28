@@ -3,7 +3,8 @@ import XEUtils from 'xe-utils'
 import GlobalConfig from '../../v-x-e-table/src/conf'
 import { VXETable } from '../../v-x-e-table'
 import { isColumnInfo, mergeBodyMethod, getCellValue } from '../../table/src/util'
-import { errLog, warnLog, parseFile, formatText } from '../../tools/utils'
+import { parseFile, formatText } from '../../tools/utils'
+import { warnLog, errLog } from '../../tools/log'
 import { readLocalFile, handlePrint, saveLocalFile, createHtmlPage, getExportBlobByContent } from './util'
 
 import { VxeGlobalHooksHandles, VxeGridConstructor, VxeGridPrivateMethods, TableExportMethods } from '../../../types/all'
@@ -903,7 +904,7 @@ const tableExportHook: VxeGlobalHooksHandles.HookOptions = {
               reader.onload = (e: any) => {
                 handleImport(e.target.result, options)
               }
-              reader.readAsText(file, 'UTF-8')
+              reader.readAsText(file, options.encoding || 'UTF-8')
             })
           }
         } else {

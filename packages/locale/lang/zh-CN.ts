@@ -1,5 +1,8 @@
 export default {
   vxe: {
+    loading: {
+      text: '加载中'
+    },
     error: {
       groupFixed: '如果使用分组表头，固定列必须按组设置',
       groupMouseRange: '分组表头与 "{0}" 不能同时使用，这可能会出现错误',
@@ -79,7 +82,8 @@ export default {
       area: {
         mergeErr: '无法对合并单元格进行该操作',
         multiErr: '无法对多重选择区域进行该操作',
-        extendErr: '如果延伸的区域包含被合并的单元格，所有合并的单元格需大小相同'
+        extendErr: '如果延伸的区域包含被合并的单元格，所有合并的单元格需大小相同',
+        pasteMultiErr: '无法粘贴，需要相同大小的复制的区域和粘贴的区域才能执行此操作'
       },
       fnr: {
         title: '查找和替换',
@@ -145,6 +149,8 @@ export default {
       operError: '发生错误，操作失败！'
     },
     select: {
+      search: '搜索',
+      loadingText: '加载中',
       emptyText: '暂无数据'
     },
     pager: {

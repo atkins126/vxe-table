@@ -2,8 +2,8 @@ import { createCommentVNode, defineComponent, h, ref, Ref, PropType, inject, nex
 import XEUtils from 'xe-utils'
 import GlobalConfig from '../../v-x-e-table/src/conf'
 import { VXETable } from '../../v-x-e-table'
-import { mergeBodyMethod, getRowid, getPropClass, removeScrollListener, restoreScrollListener, XEBodyScrollElement } from './util'
-import { browse, updateCellTitle } from '../../tools/dom'
+import { mergeBodyMethod, getRowid, removeScrollListener, restoreScrollListener, XEBodyScrollElement } from './util'
+import { updateCellTitle, getPropClass } from '../../tools/dom'
 import { isEnableConf } from '../../tools/utils'
 
 import { VxeTablePrivateMethods, VxeTableConstructor, VxeTableDefines, VxeTableMethods, VxeGlobalRendererHandles, VxeColumnPropTypes, SizeType } from '../../../types/all'
@@ -31,7 +31,7 @@ export default defineComponent({
 
     const { xID, props: tableProps, context: tableContext, reactData: tableReactData, internalData: tableInternalData } = $xetable
     const { refTableHeader, refTableBody, refTableFooter, refTableLeftBody, refTableRightBody, refValidTooltip } = $xetable.getRefMaps()
-    const { computeEditOpts, computeMouseOpts, computeSYOpts, computeEmptyOpts, computeKeyboardOpts, computeTooltipOpts, computeRadioOpts, computeTreeOpts, computeCheckboxOpts, computeValidOpts, computeRowOpts } = $xetable.getComputeMaps()
+    const { computeEditOpts, computeMouseOpts, computeSYOpts, computeEmptyOpts, computeKeyboardOpts, computeTooltipOpts, computeRadioOpts, computeTreeOpts, computeCheckboxOpts, computeValidOpts, computeRowOpts, computeColumnOpts } = $xetable.getComputeMaps()
 
     const refElem = ref() as Ref<XEBodyScrollElement>
     const refBodyTable = ref() as Ref<HTMLTableElement>
@@ -122,7 +122,7 @@ export default defineComponent({
      * 渲染列
      */
     const renderColumn = (seq: number | string, rowid: string, fixedType: any, rowLevel: number, row: any, rowIndex: number, $rowIndex: number, _rowIndex: number, column: any, $columnIndex: number, columns: any, items: any[]) => {
-      const { columnKey, height, showOverflow: allColumnOverflow, cellClassName, cellStyle, align: allAlign, spanMethod, mouseConfig, editConfig, editRules, tooltipConfig } = tableProps
+      const { columnKey, height, showOverflow: allColumnOverflow, cellClassName: allCellClassName, cellStyle, align: allAlign, spanMethod, mouseConfig, editConfig, editRules, tooltipConfig } = tableProps
       const { tableData, overflowX, scrollYLoad, currentColumn, mergeList, editStore, validStore, isAllOverflow } = tableReactData
       const { afterFullData } = tableInternalData
       const validOpts = computeValidOpts.value
@@ -131,10 +131,14 @@ export default defineComponent({
       const tooltipOpts = computeTooltipOpts.value
       const rowOpts = computeRowOpts.value
       const sYOpts = computeSYOpts.value
+      const columnOpts = computeColumnOpts.value
       const { type, cellRender, editRender, align, showOverflow, className, treeNode } = column
       const { actived } = editStore
       const { rHeight: scrollYRHeight } = sYOpts
       const { height: rowHeight } = rowOpts
+      const renderOpts = editRender || cellRender
+      const compConf = renderOpts ? VXETable.renderer.get(renderOpts.name) : null
+      const cellClassName = compConf ? compConf.cellClassName : ''
       const showAllTip = tooltipOpts.showAll
       const columnIndex = $xetable.getColumnIndex(column)
       const _columnIndex = $xetable.getVTColumnIndex(column)
@@ -233,7 +237,7 @@ export default defineComponent({
       }
       // 如果编辑列开启显示状态
       if (!fixedHiddenColumn && editConfig && (editRender || cellRender) && (editOpts.showStatus || editOpts.showUpdateStatus)) {
-        isDirty = $xetable.isUpdateByRow(row, column.property)
+        isDirty = $xetable.isUpdateByRow(row, column.field)
       }
       const tdVNs = []
       if (fixedHiddenColumn && (allColumnOverflow ? isAllOverflow : allColumnOverflow)) {
@@ -282,20 +286,27 @@ export default defineComponent({
       }
 
       return h('td', {
-        class: ['vxe-body--column', column.id, {
-          [`col--${cellAlign}`]: cellAlign,
-          [`col--${type}`]: type,
-          'col--last': $columnIndex === columns.length - 1,
-          'col--tree-node': treeNode,
-          'col--edit': isEdit,
-          'col--ellipsis': hasEllipsis,
-          'fixed--hidden': fixedHiddenColumn,
-          'col--dirty': isDirty,
-          'col--actived': editConfig && isEdit && (actived.row === row && (actived.column === column || editOpts.mode === 'row')),
-          'col--valid-error': hasValidError,
-          'col--current': currentColumn === column
-        }, getPropClass(className, params), getPropClass(cellClassName, params)],
-        key: columnKey ? column.id : $columnIndex,
+        class: [
+          'vxe-body--column',
+          column.id,
+          {
+            [`col--${cellAlign}`]: cellAlign,
+            [`col--${type}`]: type,
+            'col--last': $columnIndex === columns.length - 1,
+            'col--tree-node': treeNode,
+            'col--edit': isEdit,
+            'col--ellipsis': hasEllipsis,
+            'fixed--hidden': fixedHiddenColumn,
+            'col--dirty': isDirty,
+            'col--actived': editConfig && isEdit && (actived.row === row && (actived.column === column || editOpts.mode === 'row')),
+            'col--valid-error': hasValidError,
+            'col--current': currentColumn === column
+          },
+          getPropClass(cellClassName, params),
+          getPropClass(className, params),
+          getPropClass(allCellClassName, params)
+        ],
+        key: columnKey || columnOpts.useKey ? column.id : $columnIndex,
         ...attrs,
         style: Object.assign({
           height: hasEllipsis && (scrollYRHeight || rowHeight) ? `${scrollYRHeight || rowHeight}px` : ''
@@ -346,30 +357,46 @@ export default defineComponent({
           _rowIndex = rest._index
         }
         const params = { $table: $xetable, seq, rowid, fixed: fixedType, type: renderType, level: rowLevel, row, rowIndex, $rowIndex, _rowIndex }
+        // 行是否被展开
+        const isExpandRow = expandColumn && rowExpandeds.length && $xetable.findRowIndexOf(rowExpandeds, row) > -1
+        // 树节点是否被展开
+        let isExpandTree = false
+        let rowChildren = []
         // 处理新增状态
         let isNewRow = false
         if (editConfig) {
           isNewRow = $xetable.findRowIndexOf(editStore.insertList, row) > -1
         }
+        if (treeConfig && !scrollYLoad && !transform && treeExpandeds.length) {
+          rowChildren = row[treeOpts.children]
+          isExpandTree = rowChildren && rowChildren.length && $xetable.findRowIndexOf(treeExpandeds, row) > -1
+        }
         rows.push(
           h('tr', {
-            class: ['vxe-body--row', {
-              'row--stripe': stripe && ($xetable.getVTRowIndex(row) + 1) % 2 === 0,
-              'is--new': isNewRow,
-              'row--new': isNewRow && (editOpts.showStatus || editOpts.showInsertStatus),
-              'row--radio': radioOpts.highlight && selectRow === row,
-              'row--checked': checkboxOpts.highlight && $xetable.isCheckedByCheckboxRow(row)
-            }, rowClassName ? (XEUtils.isFunction(rowClassName) ? rowClassName(params) : rowClassName) : ''],
+            class: [
+              'vxe-body--row',
+              treeConfig ? `row--level-${rowLevel}` : '',
+              {
+                'row--stripe': stripe && ($xetable.getVTRowIndex(row) + 1) % 2 === 0,
+                'is--new': isNewRow,
+                'is--expand-row': isExpandRow,
+                'is--expand-tree': isExpandTree,
+                'row--new': isNewRow && (editOpts.showStatus || editOpts.showInsertStatus),
+                'row--radio': radioOpts.highlight && selectRow === row,
+                'row--checked': checkboxOpts.highlight && $xetable.isCheckedByCheckboxRow(row)
+              },
+              getPropClass(rowClassName, params)
+            ],
             rowid: rowid,
             style: rowStyle ? (XEUtils.isFunction(rowStyle) ? rowStyle(params) : rowStyle) : null,
-            key: rowKey || treeConfig ? rowid : $rowIndex,
+            key: (rowKey || rowOpts.useKey) || treeConfig ? rowid : $rowIndex,
             ...trOn
           }, tableColumn.map((column: any, $columnIndex: any) => {
             return renderColumn(seq, rowid, fixedType, rowLevel, row, rowIndex, $rowIndex, _rowIndex, column, $columnIndex, tableColumn, tableData)
           }))
         )
         // 如果行被展开了
-        if (expandColumn && rowExpandeds.length && $xetable.findRowIndexOf(rowExpandeds, row) > -1) {
+        if (isExpandRow) {
           let cellStyle
           if (treeConfig) {
             cellStyle = {
@@ -418,7 +445,7 @@ export default defineComponent({
      * 同步滚动条
      */
     let scrollProcessTimeout: any
-    const syncBodyScroll = (scrollTop: number, elem1: XEBodyScrollElement | null, elem2: XEBodyScrollElement | null) => {
+    const syncBodyScroll = (fixedType: VxeColumnPropTypes.Fixed, scrollTop: number, elem1: XEBodyScrollElement | null, elem2: XEBodyScrollElement | null) => {
       if (elem1 || elem2) {
         if (elem1) {
           removeScrollListener(elem1)
@@ -429,9 +456,29 @@ export default defineComponent({
           elem2.scrollTop = scrollTop
         }
         clearTimeout(scrollProcessTimeout)
-        scrollProcessTimeout = setTimeout(function () {
+        scrollProcessTimeout = setTimeout(() => {
+          // const tableBody = refTableBody.value
+          // const leftBody = refTableLeftBody.value
+          // const rightBody = refTableRightBody.value
+          // const bodyElem = tableBody.$el as XEBodyScrollElement
+          // const leftElem = leftBody ? leftBody.$el as XEBodyScrollElement : null
+          // const rightElem = rightBody ? rightBody.$el as XEBodyScrollElement : null
           restoreScrollListener(elem1)
           restoreScrollListener(elem2)
+          // 检查滚动条是的同步
+          // let targetTop = bodyElem.scrollTop
+          // if (fixedType === 'left') {
+          //   if (leftElem) {
+          //     targetTop = leftElem.scrollTop
+          //   }
+          // } else if (fixedType === 'right') {
+          //   if (rightElem) {
+          //     targetTop = rightElem.scrollTop
+          //   }
+          // }
+          // setScrollTop(bodyElem, targetTop)
+          // setScrollTop(leftElem, targetTop)
+          // setScrollTop(rightElem, targetTop)
         }, 300)
       }
     }
@@ -459,8 +506,10 @@ export default defineComponent({
       const bodyElem = tableBody.$el as XEBodyScrollElement
       const leftElem = leftBody ? leftBody.$el as XEBodyScrollElement : null
       const rightElem = rightBody ? rightBody.$el as XEBodyScrollElement : null
-      const bodyYElem = elemStore['main-body-ySpace']
-      const bodyXElem = elemStore['main-body-xSpace']
+      const bodyYRef = elemStore['main-body-ySpace']
+      const bodyYElem = bodyYRef ? bodyYRef.value : null
+      const bodyXRef = elemStore['main-body-xSpace']
+      const bodyXElem = bodyXRef ? bodyXRef.value : null
       const bodyHeight = scrollYLoad && bodyYElem ? bodyYElem.clientHeight : bodyElem.clientHeight
       const bodyWidth = scrollXLoad && bodyXElem ? bodyXElem.clientWidth : bodyElem.clientWidth
       let scrollTop = scrollBodyElem.scrollTop
@@ -475,10 +524,10 @@ export default defineComponent({
       }
       if (leftElem && fixedType === 'left') {
         scrollTop = leftElem.scrollTop
-        syncBodyScroll(scrollTop, bodyElem, rightElem)
+        syncBodyScroll(fixedType, scrollTop, bodyElem, rightElem)
       } else if (rightElem && fixedType === 'right') {
         scrollTop = rightElem.scrollTop
-        syncBodyScroll(scrollTop, bodyElem, leftElem)
+        syncBodyScroll(fixedType, scrollTop, bodyElem, leftElem)
       } else {
         if (isRollX) {
           if (headerElem) {
@@ -491,7 +540,7 @@ export default defineComponent({
         if (leftElem || rightElem) {
           $xetable.checkScrolling()
           if (isRollY) {
-            syncBodyScroll(scrollTop, leftElem, rightElem)
+            syncBodyScroll(fixedType, scrollTop, leftElem, rightElem)
           }
         }
       }
@@ -533,8 +582,10 @@ export default defineComponent({
       const leftElem = leftBody ? leftBody.$el as HTMLDivElement : null
       const rightElem = rightBody ? rightBody.$el as HTMLDivElement : null
       const bodyElem = tableBody.$el as HTMLDivElement
-      const bodyYElem = elemStore['main-body-ySpace']
-      const bodyXElem = elemStore['main-body-xSpace']
+      const bodyYRef = elemStore['main-body-ySpace']
+      const bodyYElem = bodyYRef ? bodyYRef.value : null
+      const bodyXRef = elemStore['main-body-xSpace']
+      const bodyXElem = bodyXRef ? bodyXRef.value : null
       const bodyHeight = scrollYLoad && bodyYElem ? bodyYElem.clientHeight : bodyElem.clientHeight
       const bodyWidth = scrollXLoad && bodyXElem ? bodyXElem.clientWidth : bodyElem.clientWidth
       const remainSize = isPrevWheelTop === isTopWheel ? Math.max(0, wheelYSize - wheelYTotal) : 0
@@ -593,8 +644,8 @@ export default defineComponent({
       const scrollBodyElem = refElem.value
       const bodyElem = tableBody.$el as HTMLDivElement
 
-      const deltaTop = browse.firefox ? deltaY * 40 : deltaY
-      const deltaLeft = browse.firefox ? deltaX * 40 : deltaX
+      const deltaTop = deltaY
+      const deltaLeft = deltaX
       const isTopWheel = deltaTop < 0
       // 如果滚动位置已经是顶部或底部，则不需要触发
       if (isTopWheel ? scrollBodyElem.scrollTop <= 0 : scrollBodyElem.scrollTop >= scrollBodyElem.scrollHeight - scrollBodyElem.clientHeight) {
@@ -628,13 +679,13 @@ export default defineComponent({
         const { elemStore } = tableInternalData
         const prefix = `${fixedType || 'main'}-body-`
         const el = refElem.value
-        elemStore[`${prefix}wrapper`] = refElem.value
-        elemStore[`${prefix}table`] = refBodyTable.value
-        elemStore[`${prefix}colgroup`] = refBodyColgroup.value
-        elemStore[`${prefix}list`] = refBodyTBody.value
-        elemStore[`${prefix}xSpace`] = refBodyXSpace.value
-        elemStore[`${prefix}ySpace`] = refBodyYSpace.value
-        elemStore[`${prefix}emptyBlock`] = refBodyEmptyBlock.value
+        elemStore[`${prefix}wrapper`] = refElem
+        elemStore[`${prefix}table`] = refBodyTable
+        elemStore[`${prefix}colgroup`] = refBodyColgroup
+        elemStore[`${prefix}list`] = refBodyTBody
+        elemStore[`${prefix}xSpace`] = refBodyXSpace
+        elemStore[`${prefix}ySpace`] = refBodyYSpace
+        elemStore[`${prefix}emptyBlock`] = refBodyEmptyBlock
         el.onscroll = scrollEvent
         el._onscroll = scrollEvent
       })
@@ -708,7 +759,7 @@ export default defineComponent({
         ref: refElem,
         class: ['vxe-table--body-wrapper', fixedType ? `fixed-${fixedType}--wrapper` : 'body--wrapper'],
         xid: xID,
-        ...(scrollYLoad && sYOpts.mode === 'wheel' ? { onWheel: wheelEvent } : {})
+        ...(sYOpts.mode === 'wheel' ? { onWheel: wheelEvent } : {})
       }, [
         fixedType ? createCommentVNode() : h('div', {
           ref: refBodyXSpace,

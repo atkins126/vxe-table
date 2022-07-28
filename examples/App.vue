@@ -77,7 +77,7 @@
                 </li>
                 <li v-for="(item, index) in appData.apiList" :key="index" :class="{expand: item.expand}">
                   <a class="nav-link" @click="linkEvent(item)" :title="item.disabled ? $t('app.body.other.newFunc') : item.label" :class="{disabled: item.disabled, active: pageKey === item.value}">
-                    <i class="vxe-icon--arrow-right nav-link-icon"></i>
+                    <i class="vxe-icon-arrow-right nav-link-icon"></i>
                     <span v-html="item.label"></span>
                   </a>
                   <ul v-if="item.children" v-show="item.expand" class="nav-child-menu">
@@ -96,7 +96,7 @@
         </div>
       </div>
       <div class="oper-wrapper" v-show="showOperBtn">
-        <vxe-button class="oper-btn" :icon="appData.showLeft ? 'vxe-icon--arrow-left' : 'vxe-icon--arrow-right'" @click="appData.showLeft = !appData.showLeft"></vxe-button>
+        <vxe-button class="oper-btn" :icon="appData.showLeft ? 'vxe-icon-arrow-left' : 'vxe-icon-arrow-right'" @click="appData.showLeft = !appData.showLeft"></vxe-button>
       </div>
       <div class="body">
         <div class="content" :class="{full: ['VXEAPI', 'Donation', 'Run'].includes($route.name)}">
@@ -1851,7 +1851,7 @@ export default defineComponent({
     })
 
     const getVersion = () => {
-      XEAjax.get('https://api.xuliangzhan.com:10443/demo/api/npm/versions/vxe-table').then(({ sp, dp, ss, time, tags, versions }) => {
+      XEAjax.get('https://api.vxetable.cn/demo/api/npm/versions/vxe-table').then(({ sp, dp, ss, time, tags, versions }) => {
         appData.apiLoading = true
         appData.disabledPlugin = dp
         appData.showPlugin = sp
@@ -2052,7 +2052,7 @@ export default defineComponent({
     }
 
     const loadSponsors = () => {
-      XEAjax.get('https://api.xuliangzhan.com:10443/demo/api/pub/sponsors').then(data => {
+      XEAjax.get('https://api.vxetable.cn/demo/api/pub/sponsors').then(data => {
         appData.sponsorList = data
       })
     }

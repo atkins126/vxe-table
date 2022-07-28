@@ -2,7 +2,9 @@ import { VxeTableEmits } from '../../../types/all'
 
 export default [
   'update:data',
+  'keydown-start',
   'keydown',
+  'keydown-end',
   'paste',
   'copy',
   'cut',
@@ -18,6 +20,7 @@ export default [
   'cell-menu',
   'cell-mouseenter',
   'cell-mouseleave',
+  'cell-selected',
   'header-cell-click',
   'header-cell-dblclick',
   'header-cell-menu',
@@ -56,9 +59,13 @@ export default [
   'clear-cell-area-merge',
   'header-cell-area-selection',
   'cell-area-selection-start',
+  'cell-area-selection-drag',
   'cell-area-selection-end',
   'cell-area-extension-start',
+  'cell-area-extension-drag',
   'cell-area-extension-end',
   'cell-area-arrows-start',
-  'cell-area-arrows-end'
+  'cell-area-arrows-end',
+  'active-cell-change-start',
+  'active-cell-change-end'
 ] as VxeTableEmits

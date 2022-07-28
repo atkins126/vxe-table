@@ -110,7 +110,7 @@ const tableFilterHook: VxeGlobalHooksHandles.HookOptions = {
             filterStore.maxHeight = maxHeight
           })
         }
-        $xetable.dispatchEvent('filter-visible', { column, property: column.property, filterList: $xetable.getCheckedFilters(), visible: filterStore.visible }, evnt)
+        $xetable.dispatchEvent('filter-visible', { column, field: column.field, property: column.field, filterList: $xetable.getCheckedFilters(), visible: filterStore.visible }, evnt)
       },
       handleClearFilter (column) {
         if (column) {
@@ -137,10 +137,10 @@ const tableFilterHook: VxeGlobalHooksHandles.HookOptions = {
        * @param {Event} evnt 事件
        */
       confirmFilterEvent (evnt: Event) {
-        const { filterStore, scrollXLoad, scrollYLoad } = reactData
+        const { filterStore, scrollXLoad: oldScrollXLoad, scrollYLoad: oldScrollYLoad } = reactData
         const filterOpts = computeFilterOpts.value
         const { column } = filterStore
-        const { property } = column
+        const { field } = column
         const values: any[] = []
         const datas: any[] = []
         column.filters.forEach((item: any) => {
@@ -154,19 +154,26 @@ const tableFilterHook: VxeGlobalHooksHandles.HookOptions = {
         if (!filterOpts.remote) {
           $xetable.handleTableData(true)
           $xetable.checkSelectionStatus()
-          $xetable.updateFooter()
-          if (scrollXLoad || scrollYLoad) {
-            $xetable.clearScroll()
-            if (scrollYLoad) {
+        }
+        $xetable.dispatchEvent('filter-change', { column, field, property: field, values, datas, filters: filterList, filterList }, evnt)
+        $xetable.closeFilter()
+        $xetable.updateFooter().then(() => {
+          const { scrollXLoad, scrollYLoad } = reactData
+          if ((oldScrollXLoad || scrollXLoad) || (oldScrollYLoad || scrollYLoad)) {
+            if (oldScrollXLoad || scrollXLoad) {
+              $xetable.updateScrollXSpace()
+            }
+            if (oldScrollYLoad || scrollYLoad) {
               $xetable.updateScrollYSpace()
             }
+            return $xetable.refreshScroll()
           }
-        }
-        $xetable.dispatchEvent('filter-change', { column, property, values, datas, filters: filterList, filterList }, evnt)
-        $xetable.closeFilter()
-        nextTick(() => {
-          $xetable.recalculate()
+        }).then(() => {
           $xetable.updateCellAreas()
+          return $xetable.recalculate(true)
+        }).then(() => {
+          // 存在滚动行为未结束情况
+          setTimeout(() => $xetable.recalculate(), 50)
         })
       }
     }
@@ -182,9 +189,10 @@ const tableFilterHook: VxeGlobalHooksHandles.HookOptions = {
           const { elemStore } = internalData
           const { fixed } = column
           return $xetable.scrollToColumn(column).then(() => {
-            const headerWrapperElem = elemStore[`${fixed || 'main'}-header-wrapper`] || elemStore['main-header-wrapper']
+            const headerWrapperRef = elemStore[`${fixed || 'main'}-header-wrapper`] || elemStore['main-header-wrapper']
+            const headerWrapperElem = headerWrapperRef ? headerWrapperRef.value : null
             if (headerWrapperElem) {
-              const filterBtnElem = headerWrapperElem.querySelector(`.vxe-header--column.${column.id} .vxe-filter--btn`)
+              const filterBtnElem = headerWrapperElem.querySelector(`.vxe-header--column.${column.id} .vxe-filter--btn`) as HTMLElement
               triggerEvent(filterBtnElem, 'click')
             }
           })
@@ -240,19 +248,19 @@ const tableFilterHook: VxeGlobalHooksHandles.HookOptions = {
       getCheckedFilters () {
         const { tableFullColumn } = internalData
         const filterList: any[] = []
-        tableFullColumn.filter((column: any) => {
-          const { property, filters } = column
+        tableFullColumn.filter((column) => {
+          const { field, filters } = column
           const valueList: any[] = []
           const dataList: any[] = []
           if (filters && filters.length) {
-            filters.forEach((item: any) => {
+            filters.forEach((item) => {
               if (item.checked) {
                 valueList.push(item.value)
                 dataList.push(item.data)
               }
             })
             if (valueList.length) {
-              filterList.push({ column, property, values: valueList, datas: dataList })
+              filterList.push({ column, field, property: field, values: valueList, datas: dataList })
             }
           }
         })

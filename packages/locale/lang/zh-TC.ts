@@ -1,5 +1,8 @@
 export default {
   vxe: {
+    loading: {
+      text: '加載中'
+    },
     error: {
       groupFixed: '如果使用分組表頭，固定列必須按組設定',
       groupMouseRange: '分组表頭與 "{0}" 不能同時使用，這可能會出現錯誤',
@@ -79,7 +82,8 @@ export default {
       area: {
         mergeErr: '無法對合併儲存格進行該操作',
         multiErr: '無法對多重選擇區域進行該操作',
-        extendErr: '如果延伸的區域包含被合併的儲存格，所有合併的儲存格需大小相同'
+        extendErr: '如果延伸的區域包含被合併的儲存格，所有合併的儲存格需大小相同',
+        pasteMultiErr: '无法粘贴，需要相同大小的复制的区域和粘贴的区域才能执行此操作'
       },
       fnr: {
         title: '查找和替換',
@@ -145,6 +149,8 @@ export default {
       operError: '發生錯誤，操作失敗！'
     },
     select: {
+      search: '蒐索',
+      loadingText: '加載中',
       emptyText: '暫無資料'
     },
     pager: {

@@ -134,6 +134,7 @@
       "export-method",
       "footer-export-method",
       "title-help",
+      "title-prefix",
       "cell-type",
       "cell-render",
       "edit-render",
@@ -276,6 +277,7 @@
       "content",
       "size",
       "disabled",
+      "strict",
       "name"
     ],
     "description": "单选框"
@@ -284,7 +286,8 @@
     "attributes": [
       "model-value",
       "size",
-      "disabled"
+      "disabled",
+      "strict"
     ],
     "subtags": [
       "vxe-radio",
@@ -297,7 +300,8 @@
       "model-value",
       "label",
       "content",
-      "disabled"
+      "disabled",
+      "strict"
     ],
     "description": "单选按钮"
   },
@@ -351,6 +355,7 @@
       "placeholder",
       "autocomplete",
       "maxlength",
+      "multiple",
       "readonly",
       "disabled",
       "class-name",
@@ -394,6 +399,7 @@
       "option-props",
       "option-groups",
       "option-group-props",
+      "option-config",
       "option-id",
       "option-key",
       "transfer"
@@ -454,7 +460,8 @@
       "z-index",
       "is-arrow",
       "enterable",
-      "leave-delay"
+      "enter-delay",
+      "leavedelay"
     ],
     "description": "工具提示"
   },
@@ -537,6 +544,8 @@
       "align",
       "title-align",
       "title-width",
+      "title-colon",
+      "title-asterisk",
       "title-overflow",
       "class-name",
       "visible",
@@ -572,6 +581,7 @@
   },
   "vxe-pulldown": {
     "attributes": [
+      "model-value",
       "size",
       "disabled",
       "placement",

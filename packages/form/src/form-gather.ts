@@ -1,5 +1,5 @@
-import { defineComponent, h, onUnmounted, inject, ref, Ref, onMounted, provide, nextTick } from 'vue'
-import { errLog } from '../../tools/utils'
+import { defineComponent, h, onUnmounted, inject, ref, Ref, reactive, onMounted, provide, nextTick } from 'vue'
+import { errLog } from '../../tools/log'
 import { createItem, watchItem, destroyItem, assemItem, XEFormItemProvide } from './util'
 import { formItemProps } from './form-item'
 
@@ -11,13 +11,16 @@ export default defineComponent({
   setup (props, { slots }) {
     const refElem = ref() as Ref<HTMLDivElement>
     const $xeform = inject('$xeform', {} as VxeFormConstructor & VxeFormPrivateMethods)
-    const formGather = inject('xeformgather', null as XEFormItemProvide | null)
+    const formGather = inject('$xeformgather', null as XEFormItemProvide | null)
     const defaultSlot = slots.default
-    const formItem = createItem($xeform, props)
+    const formItem = reactive(createItem($xeform, props))
     const xeformitem: XEFormItemProvide = { formItem }
+    const xeformiteminfo = { itemConfig: formItem }
     formItem.children = []
 
-    provide('xeformgather', xeformitem)
+    provide('$xeformiteminfo', xeformiteminfo)
+    provide('$xeformgather', xeformitem)
+    provide('$xeformitem', null)
 
     watchItem(props, formItem)
 
@@ -43,6 +46,13 @@ export default defineComponent({
       }, defaultSlot ? defaultSlot() : [])
     }
 
-    return renderVN
+    const $xeformgather = {
+      renderVN
+    }
+
+    return $xeformgather
+  },
+  render () {
+    return this.renderVN()
   }
 })

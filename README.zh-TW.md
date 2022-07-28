@@ -25,15 +25,11 @@
   * [x] v3.0 基於 vue2.6+，支持現代瀏覽器並保留相容IE11，提升渲染效能
   * [x] v4.0 基于 vue3.0+，只支持現代瀏覽器，不支持IE
 
-## QQ 交流群
-
-![qq](https://gitee.com/xuliangzhan_admin/vxe-table/raw/master/public/static/donation/qq.png)
-
 ## 瀏覽器支持
 
 ![Edge](https://raw.github.com/alrra/browser-logos/master/src/edge/edge_48x48.png) | ![Chrome](https://raw.github.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png) | ![Firefox](https://raw.github.com/alrra/browser-logos/master/src/firefox/firefox_48x48.png) | ![Opera](https://raw.github.com/alrra/browser-logos/master/src/opera/opera_48x48.png) | ![Safari](https://raw.github.com/alrra/browser-logos/master/src/safari/safari_48x48.png)
 --- | --- | --- | --- | --- |
-Latest ✔ | Latest ✔ | Latest ✔ | Latest ✔ | 8+ ✔ |
+Latest ✔ | Latest ✔ | Latest ✔ | Latest ✔ | Latest ✔ |
 
 ## 功能點
 
@@ -106,7 +102,7 @@ createApp(App).use(VXETable).mount('#app')
 
 ### CDN
 
-不建議將公共的CDN地址用於生產，因為該連接隨時都可能會失效，導致項目掛掉；  
+不建議將第三方的CDN地址用於生產，因為該連接隨時都可能會失效，導致項目掛掉；  
 使用CDN管道記得鎖定版本號，避免受到非相容性更新的影響
 
 ```HTML
@@ -154,9 +150,7 @@ export default defineComponent({
 
 ## 檔案
 
-💡 [使用指南](https://github.com/xuliangzhan/vxe-table-demo)  
-👉 [查看檔案](https://xuliangzhan_admin.gitee.io/vxe-table/) [👀備用地址1](https://x-extends.github.io/vxe-table/#/table/base/basic)  
-👉 [查看檔案](https://xuliangzhan_admin.gitee.io/vxe-table/#/table/api) [👀備用地址1](https://x-extends.github.io/vxe-table/#/table/api)
+👉 [查看檔案](https://vxetable.cn)  
 
 ## 運行項目
 

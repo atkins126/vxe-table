@@ -1,13 +1,15 @@
 import { defineComponent, h, PropType, ref, Ref, computed, provide, getCurrentInstance, resolveComponent, ComponentOptions, reactive, onUnmounted, watch, nextTick, VNode, ComponentPublicInstance, onMounted } from 'vue'
 import XEUtils from 'xe-utils'
-import { errLog, getLastZIndex, nextZIndex, isEnableConf } from '../../tools/utils'
+import { getLastZIndex, nextZIndex, isEnableConf } from '../../tools/utils'
 import { getOffsetHeight, getPaddingTopBottomSize, getDomNode } from '../../tools/dom'
+import { errLog } from '../../tools/log'
 import GlobalConfig from '../../v-x-e-table/src/conf'
 import { VXETable } from '../../v-x-e-table'
 import tableComponentProps from '../../table/src/props'
 import tableComponentEmits from '../../table/src/emits'
 import { useSize } from '../../hooks/size'
 import { GlobalEvent, hasEventKey, EVENT_KEYS } from '../../tools/event'
+import { getSlotVNs } from '../../tools/vn'
 
 import { TableMethods, VxeGridConstructor, VxeGridEmits, GridReactData, VxeGridPropTypes, VxeToolbarPropTypes, GridMethods, GridPrivateMethods, VxeGridPrivateComputed, VxeGridPrivateMethods, VxePagerInstance, VxeToolbarInstance, GridPrivateRef, VxeFormInstance, VxeTableProps, VxeTableConstructor, VxeTableMethods, VxeTablePrivateMethods, VxeTableEvents, VxePagerEvents, VxeFormEvents, VxeTableDefines, VxeTableEventProps, VxeFormItemProps, VxeGridProps } from '../../../types/all'
 
@@ -62,7 +64,7 @@ export default defineComponent({
       tZindex: 0,
       tablePage: {
         total: 0,
-        pageSize: 10,
+        pageSize: GlobalConfig.pager.pageSize || 10,
         currentPage: 1
       }
     } as GridReactData)
@@ -176,12 +178,15 @@ export default defineComponent({
       return clss
     }
 
-    const handleActiveMethod = (params: any) => {
+    const handleBeforeEditMethod = (params: any) => {
       const { editConfig } = props
       const { pendingRecords } = reactData
       const $xetable = refTable.value
-      const activeMethod = editConfig ? editConfig.activeMethod : null
-      return $xetable.findRowIndexOf(pendingRecords, params.row) === -1 && (!activeMethod || activeMethod({ ...params, $grid: $xegrid }))
+      const beforeEditMethod = editConfig ? (editConfig.beforeEditMethod || editConfig.activeMethod) : null
+      if ($xetable.findRowIndexOf(pendingRecords, params.row) === -1) {
+        return !beforeEditMethod || beforeEditMethod({ ...params, $grid: $xegrid })
+      }
+      return false
     }
 
     const computeTableProps = computed(() => {
@@ -206,7 +211,7 @@ export default defineComponent({
         }
       }
       if (editConfig) {
-        tableProps.editConfig = Object.assign({}, editConfig, { activeMethod: handleActiveMethod })
+        tableProps.editConfig = Object.assign({}, editConfig, { beforeEditMethod: handleBeforeEditMethod })
       }
       return tableProps
     })
@@ -222,8 +227,8 @@ export default defineComponent({
     }
 
     const initPages = () => {
-      const { pagerConfig } = props
       const { tablePage } = reactData
+      const { pagerConfig } = props
       const pagerOpts = computePagerOpts.value
       const { currentPage, pageSize } = pagerOpts
       if (pagerConfig) {
@@ -592,10 +597,10 @@ export default defineComponent({
             leftSlot = getFuncSlot(pagerOptSlots, 'left')
             rightSlot = getFuncSlot(pagerOptSlots, 'right')
             if (leftSlot) {
-              pagerSlots.buttons = leftSlot
+              pagerSlots.left = leftSlot
             }
             if (rightSlot) {
-              pagerSlots.tools = rightSlot
+              pagerSlots.right = rightSlot
             }
           }
           slotVNs.push(
@@ -642,9 +647,11 @@ export default defineComponent({
           })
           reactData.formData = formData
         }
-        if (!proxyInited && proxyOpts.autoLoad !== false) {
+        if (!proxyInited) {
           reactData.proxyInited = true
-          nextTick(() => gridMethods.commitProxy('_init'))
+          if (proxyOpts.autoLoad !== false) {
+            nextTick(() => gridMethods.commitProxy('_init'))
+          }
         }
       }
     }
@@ -771,7 +778,7 @@ export default defineComponent({
                   if (rest) {
                     if (isEnableConf(pagerConfig)) {
                       const total = XEUtils.get(rest, proxyProps.total || 'page.total') || 0
-                      tablePage.total = total
+                      tablePage.total = XEUtils.toNumber(total)
                       reactData.tableData = XEUtils.get(rest, proxyProps.result || 'result') || []
                       // 检验当前页码，不能超出当前最大页数
                       const pageCount = Math.max(Math.ceil(total / tablePage.pageSize), 1)
@@ -1018,7 +1025,7 @@ export default defineComponent({
             slotFunc = slots[slotFunc] || null
           }
           if (XEUtils.isFunction(slotFunc)) {
-            return slotFunc(params)
+            return getSlotVNs(slotFunc(params))
           }
         }
         return []
@@ -1071,12 +1078,12 @@ export default defineComponent({
       }
     })
 
-    watch(() => props.proxyConfig, () => {
-      initProxy()
-    })
-
     watch(() => props.pagerConfig, () => {
       initPages()
+    })
+
+    watch(() => props.proxyConfig, () => {
+      initProxy()
     })
 
     const handleGlobalKeydownEvent = (evnt: any) => {
@@ -1097,6 +1104,8 @@ export default defineComponent({
       }
     })
 
+    initPages()
+
     onMounted(() => {
       nextTick(() => {
         const { data, columns, proxyConfig } = props
@@ -1109,14 +1118,16 @@ export default defineComponent({
           $xegrid.loadColumn(columns)
         }
         initToolbar()
-        initPages()
-        initProxy()
       })
       GlobalEvent.on($xegrid, 'keydown', handleGlobalKeydownEvent)
     })
 
     onUnmounted(() => {
       GlobalEvent.off($xegrid, 'keydown')
+    })
+
+    nextTick(() => {
+      initProxy()
     })
 
     const renderVN = () => {

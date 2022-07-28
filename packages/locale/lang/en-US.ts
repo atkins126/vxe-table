@@ -1,5 +1,8 @@
 export default {
   vxe: {
+    loading: {
+      text: 'Loading'
+    },
     error: {
       groupFixed: 'If you use group headers, the fixed columns must be set by group.',
       groupMouseRange: 'Grouping headers and "{0}" cannot be used at the same time, which may cause errors.',
@@ -79,7 +82,8 @@ export default {
       area: {
         mergeErr: 'The operation cannot be performed on merged cells',
         multiErr: 'The operation cannot be performed on multiple selection areas',
-        extendErr: 'If the extended area contains merged cells, all merged cells need to be the same size'
+        extendErr: 'If the extended area contains merged cells, all merged cells need to be the same size',
+        pasteMultiErr: 'Cannot paste, copied area and pasted area of the same size are required to perform this operation'
       },
       fnr: {
         title: 'Find and replace',
@@ -145,6 +149,8 @@ export default {
       operError: 'Error occurred, operation failed!'
     },
     select: {
+      search: 'Search',
+      loadingText: 'Loading',
       emptyText: 'No Data'
     },
     pager: {

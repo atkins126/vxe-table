@@ -110,7 +110,8 @@ export default defineComponent({
       document.onmouseup = function (evnt) {
         document.onmousemove = domMousemove
         document.onmouseup = domMouseup
-        column.resizeWidth = column.renderWidth + (isRightFixed ? dragPosLeft - dragLeft : dragLeft - dragPosLeft)
+        const resizeWidth = column.renderWidth + (isRightFixed ? dragPosLeft - dragLeft : dragLeft - dragPosLeft)
+        column.resizeWidth = resizeWidth
         resizeBarElem.style.display = 'none'
         tableInternalData._isResize = false
         tableInternalData._lastResizeTime = Date.now()
@@ -118,7 +119,7 @@ export default defineComponent({
         $xetable.recalculate(true).then(() => {
           $xetable.saveCustomResizable()
           $xetable.updateCellAreas()
-          $xetable.dispatchEvent('resizable-change', params, evnt)
+          $xetable.dispatchEvent('resizable-change', { ...params, resizeWidth }, evnt)
         })
         removeClass(tableEl, 'drag--resize')
       }
@@ -136,12 +137,12 @@ export default defineComponent({
         const { internalData } = $xetable
         const { elemStore } = internalData
         const prefix = `${fixedType || 'main'}-header-`
-        elemStore[`${prefix}wrapper`] = refElem.value
-        elemStore[`${prefix}table`] = refHeaderTable.value
-        elemStore[`${prefix}colgroup`] = refHeaderColgroup.value
-        elemStore[`${prefix}list`] = refHeaderTHead.value
-        elemStore[`${prefix}xSpace`] = refHeaderXSpace.value
-        elemStore[`${prefix}repair`] = refHeaderBorderRepair.value
+        elemStore[`${prefix}wrapper`] = refElem
+        elemStore[`${prefix}table`] = refHeaderTable
+        elemStore[`${prefix}colgroup`] = refHeaderColgroup
+        elemStore[`${prefix}list`] = refHeaderTHead
+        elemStore[`${prefix}xSpace`] = refHeaderXSpace
+        elemStore[`${prefix}repair`] = refHeaderBorderRepair
         uploadColumn()
       })
     })
@@ -162,13 +163,13 @@ export default defineComponent({
     const renderVN = () => {
       let { fixedType, fixedColumn, tableColumn } = props
       const { resizable, border, columnKey, headerRowClassName, headerCellClassName, headerRowStyle, headerCellStyle, showHeaderOverflow: allColumnHeaderOverflow, headerAlign: allHeaderAlign, align: allAlign, mouseConfig } = tableProps
-      const { isGroup, currentColumn, scrollYLoad, overflowX, scrollbarWidth } = tableReactData
+      const { isGroup, currentColumn, scrollXLoad, overflowX, scrollbarWidth } = tableReactData
       const columnOpts = computeColumnOpts.value
       let headerGroups: VxeTableDefines.ColumnInfo[][] = headerColumn.value
       // 如果是使用优化模式
       if (!isGroup) {
         if (fixedType) {
-          if (scrollYLoad || allColumnHeaderOverflow) {
+          if (scrollXLoad || allColumnHeaderOverflow) {
             tableColumn = fixedColumn
           }
         }
@@ -233,8 +234,8 @@ export default defineComponent({
                 onClick: (evnt: MouseEvent) => $xetable.triggerHeaderCellClickEvent(evnt, params),
                 onDblclick: (evnt: MouseEvent) => $xetable.triggerHeaderCellDblclickEvent(evnt, params)
               }
-              // 纵向虚拟滚动不支持动态行高
-              if (scrollYLoad && !hasEllipsis) {
+              // 横向虚拟滚动不支持动态行高
+              if (scrollXLoad && !hasEllipsis) {
                 showEllipsis = hasEllipsis = true
               }
               // 按下事件处理
@@ -263,7 +264,7 @@ export default defineComponent({
                 rowspan: column.rowSpan > 1 ? column.rowSpan : null,
                 style: headerCellStyle ? (XEUtils.isFunction(headerCellStyle) ? headerCellStyle(params) : headerCellStyle) : null,
                 ...thOns,
-                key: columnKey || isColGroup ? column.id : $columnIndex
+                key: columnKey || columnOpts.useKey || isColGroup ? column.id : $columnIndex
               }, [
                 h('div', {
                   class: ['vxe-cell', {

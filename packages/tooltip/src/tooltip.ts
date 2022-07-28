@@ -4,6 +4,7 @@ import GlobalConfig from '../../v-x-e-table/src/conf'
 import { useSize } from '../../hooks/size'
 import { getLastZIndex, nextZIndex, formatText } from '../../tools/utils'
 import { getAbsolutePos, getDomNode } from '../../tools/dom'
+import { getSlotVNs } from '../../tools/vn'
 
 import { VxeTooltipPropTypes, VxeTooltipConstructor, VxeTooltipEmits, TooltipReactData, TooltipMethods, TooltipPrivateRef } from '../../../types/all'
 
@@ -14,12 +15,13 @@ export default defineComponent({
     size: { type: String as PropType<VxeTooltipPropTypes.Size>, default: () => GlobalConfig.tooltip.size || GlobalConfig.size },
     trigger: { type: String as PropType<VxeTooltipPropTypes.Trigger>, default: () => GlobalConfig.tooltip.trigger },
     theme: { type: String as PropType<VxeTooltipPropTypes.Theme>, default: () => GlobalConfig.tooltip.theme },
-    content: [String, Number] as PropType<VxeTooltipPropTypes.Content>,
+    content: { type: [String, Number] as PropType<VxeTooltipPropTypes.Content>, default: null },
+    useHTML: Boolean as PropType<VxeTooltipPropTypes.UseHTML>,
     zIndex: [String, Number] as PropType<VxeTooltipPropTypes.ZIndex>,
     isArrow: { type: Boolean as PropType<VxeTooltipPropTypes.IsArrow>, default: true },
     enterable: Boolean as PropType<VxeTooltipPropTypes.Enterable>,
-    leaveDelay: { type: Number as PropType<VxeTooltipPropTypes.LeaveDelay>, default: () => GlobalConfig.tooltip.leaveDelay },
-    leaveMethod: Function as PropType<VxeTooltipPropTypes.LeaveMethod>
+    enterDelay: { type: Number as PropType<VxeTooltipPropTypes.EnterDelay>, default: () => GlobalConfig.tooltip.enterDelay },
+    leaveDelay: { type: Number as PropType<VxeTooltipPropTypes.LeaveDelay>, default: () => GlobalConfig.tooltip.leaveDelay }
   },
   emits: [
     'update:modelValue'
@@ -34,9 +36,9 @@ export default defineComponent({
     const reactData = reactive<TooltipReactData>({
       target: null,
       isUpdate: false,
-      isHover: false,
       visible: false,
-      message: '',
+      tipContent: '',
+      tipActive: false,
       tipTarget: null,
       tipZindex: 0,
       tipStore: {
@@ -61,8 +63,6 @@ export default defineComponent({
     } as unknown as VxeTooltipConstructor
 
     let tooltipMethods = {} as TooltipMethods
-
-    let targetActive: boolean
 
     const updateTipStyle = () => {
       const { tipTarget, tipStore } = reactData
@@ -117,10 +117,10 @@ export default defineComponent({
 
     const targetMouseleaveEvent = () => {
       const { trigger, enterable, leaveDelay } = props
-      targetActive = false
+      reactData.tipActive = false
       if (enterable && trigger === 'hover') {
         setTimeout(() => {
-          if (!reactData.isHover) {
+          if (!reactData.tipActive) {
             tooltipMethods.close()
           }
         }, leaveDelay)
@@ -130,32 +130,54 @@ export default defineComponent({
     }
 
     const wrapperMouseenterEvent = () => {
-      reactData.isHover = true
+      reactData.tipActive = true
     }
 
-    const wrapperMouseleaveEvent = (evnt: MouseEvent) => {
-      const { leaveMethod, trigger, enterable, leaveDelay } = props
-      reactData.isHover = false
-      if (!leaveMethod || leaveMethod({ $event: evnt }) !== false) {
-        if (enterable && trigger === 'hover') {
-          setTimeout(() => {
-            if (!targetActive) {
-              tooltipMethods.close()
-            }
-          }, leaveDelay)
-        }
+    const wrapperMouseleaveEvent = () => {
+      const { trigger, enterable, leaveDelay } = props
+      reactData.tipActive = false
+      if (enterable && trigger === 'hover') {
+        setTimeout(() => {
+          if (!reactData.tipActive) {
+            tooltipMethods.close()
+          }
+        }, leaveDelay)
       }
     }
+
+    const showTip = () => {
+      const { tipStore } = reactData
+      const el = refElem.value
+      if (el) {
+        const parentNode = el.parentNode
+        if (!parentNode) {
+          document.body.appendChild(el)
+        }
+      }
+      updateValue(true)
+      updateZindex()
+      tipStore.placement = 'top'
+      tipStore.style = { width: 'auto', left: 0, top: 0, zIndex: props.zIndex || reactData.tipZindex }
+      tipStore.arrowStyle = { left: '50%' }
+      return tooltipMethods.updatePlacement()
+    }
+
+    const showDelayTip = XEUtils.debounce(() => {
+      if (reactData.tipActive) {
+        showTip()
+      }
+    }, props.enterDelay, { leading: false, trailing: true })
 
     tooltipMethods = {
       dispatchEvent (type, params, evnt) {
         emit(type, Object.assign({ $tooltip: $xetooltip, $event: evnt }, params))
       },
-      open (target?: HTMLElement, message?: VxeTooltipPropTypes.Content) {
-        return tooltipMethods.toVisible(target || reactData.target as HTMLElement, message)
+      open (target?: HTMLElement, content?: VxeTooltipPropTypes.Content) {
+        return tooltipMethods.toVisible(target || reactData.target as HTMLElement, content)
       },
       close () {
         reactData.tipTarget = null
+        reactData.tipActive = false
         Object.assign(reactData.tipStore, {
           style: {},
           placement: '',
@@ -164,25 +186,19 @@ export default defineComponent({
         updateValue(false)
         return nextTick()
       },
-      toVisible (target: HTMLElement, message?: VxeTooltipPropTypes.Content) {
-        targetActive = true
+      toVisible (target: HTMLElement, content?: VxeTooltipPropTypes.Content) {
         if (target) {
-          const { tipStore } = reactData
-          const el = refElem.value
-          const parentNode = el.parentNode
-          if (!parentNode) {
-            document.body.appendChild(el)
-          }
-          if (message) {
-            reactData.message = message
-          }
+          const { trigger, enterDelay } = props
+          reactData.tipActive = true
           reactData.tipTarget = target
-          updateValue(true)
-          updateZindex()
-          tipStore.placement = 'top'
-          tipStore.style = { width: 'auto', left: 0, top: 0, zIndex: props.zIndex || reactData.tipZindex }
-          tipStore.arrowStyle = { left: '50%' }
-          return tooltipMethods.updatePlacement()
+          if (content) {
+            reactData.tipContent = content
+          }
+          if (enterDelay && trigger === 'hover') {
+            showDelayTip()
+          } else {
+            return showTip()
+          }
         }
         return nextTick()
       },
@@ -195,13 +211,19 @@ export default defineComponent({
             return nextTick().then(updateTipStyle)
           }
         })
+      },
+      isActived () {
+        return reactData.tipActive
+      },
+      setActived (actived) {
+        reactData.tipActive = !!actived
       }
     }
 
     Object.assign($xetooltip, tooltipMethods)
 
     watch(() => props.content, () => {
-      reactData.message = props.content
+      reactData.tipContent = props.content
     })
 
     watch(() => props.modelValue, () => {
@@ -221,7 +243,7 @@ export default defineComponent({
         const wrapperElem = refElem.value
         const parentNode = wrapperElem.parentNode
         if (parentNode) {
-          reactData.message = content
+          reactData.tipContent = content
           reactData.tipZindex = nextZIndex()
           XEUtils.arrayEach(wrapperElem.children, (elem, index) => {
             if (index > 1) {
@@ -235,8 +257,8 @@ export default defineComponent({
           const { target } = reactData
           if (target) {
             if (trigger === 'hover') {
-              target.onmouseleave = targetMouseleaveEvent
               target.onmouseenter = targetMouseenterEvent
+              target.onmouseleave = targetMouseleaveEvent
             } else if (trigger === 'click') {
               target.onclick = clickEvent
             }
@@ -268,9 +290,33 @@ export default defineComponent({
       }
     })
 
+    const renderContent = () => {
+      const { useHTML } = props
+      const { tipContent } = reactData
+      const contentSlot = slots.content
+      if (contentSlot) {
+        return h('div', {
+          key: 1,
+          class: 'vxe-table--tooltip-content'
+        }, getSlotVNs(contentSlot({})))
+      }
+      if (useHTML) {
+        return h('div', {
+          key: 2,
+          class: 'vxe-table--tooltip-content',
+          innerHTML: tipContent
+        })
+      }
+      return h('div', {
+        key: 3,
+        class: 'vxe-table--tooltip-content'
+      }, formatText(tipContent))
+    }
+
     const renderVN = () => {
       const { theme, isArrow, enterable } = props
-      const { isHover, visible, tipStore, message } = reactData
+      const { tipActive, visible, tipStore } = reactData
+      const defaultSlot = slots.default
       const vSize = computeSize.value
       let ons
       if (enterable) {
@@ -287,19 +333,18 @@ export default defineComponent({
           'is--enterable': enterable,
           'is--visible': visible,
           'is--arrow': isArrow,
-          'is--hover': isHover
+          'is--actived': tipActive
         }],
         style: tipStore.style,
         ...ons
       }, [
-        h('div', {
-          class: 'vxe-table--tooltip-content'
-        }, slots.content ? slots.content({}) : formatText(message)),
+        renderContent(),
         h('div', {
           class: 'vxe-table--tooltip-arrow',
           style: tipStore.arrowStyle
-        })
-      ].concat(slots.default ? slots.default({}) : []))
+        }),
+        ...(defaultSlot ? getSlotVNs(defaultSlot({})) : [])
+      ])
     }
 
     $xetooltip.renderVN = renderVN

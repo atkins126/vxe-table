@@ -1,5 +1,8 @@
 export default {
   vxe: {
+    loading: {
+      text: 'Loading'
+    },
     error: {
       groupFixed: 'グループのヘッダを使用すると、固定列はグループで設定しなければなりません',
       groupMouseRange: 'グループ化ヘッダーと「{0}」は同時に使用できません。これによりエラーが発生する可能性があります',
@@ -79,7 +82,8 @@ export default {
       area: {
         mergeErr: '无法对合并单元格进行该操作',
         multiErr: '无法对多重选择区域进行该操作',
-        extendErr: '如果延伸的区域包含被合并的单元格，所有合并的单元格需大小相同'
+        extendErr: '如果延伸的区域包含被合并的单元格，所有合并的单元格需大小相同',
+        pasteMultiErr: '无法粘贴，需要相同大小的复制的区域和粘贴的区域才能执行此操作'
       },
       fnr: {
         title: '查找和替换',
@@ -145,6 +149,8 @@ export default {
       operError: 'エラーが発生しました。操作が失敗しました'
     },
     select: {
+      search: 'Search',
+      loadingText: 'Loading',
       emptyText: 'データがありません'
     },
     pager: {

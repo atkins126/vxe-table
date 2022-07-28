@@ -4,6 +4,10 @@ const reClsMap: { [key: string]: any } = {}
 
 export const browse = XEUtils.browse()
 
+export function getPropClass (property: any, params: any) {
+  return property ? XEUtils.isFunction(property) ? property(params) : property : ''
+}
+
 function getClsRE (cls: any) {
   if (!reClsMap[cls]) {
     reClsMap[cls] = new RegExp(`(?:^|\\s)${cls}(?!\\S)`, 'g')
@@ -89,6 +93,13 @@ export function setScrollLeft (elem: HTMLElement | null, scrollLeft: number) {
   }
 }
 
+// export function setScrollLeftAndTop (elem: HTMLElement | null, scrollLeft: number, scrollTop: number) {
+//   if (elem) {
+//     elem.scrollLeft = scrollLeft
+//     elem.scrollTop = scrollTop
+//   }
+// }
+
 export function updateCellTitle (overflowElem: any, column: any) {
   const content = column.type === 'html' ? overflowElem.innerText : overflowElem.textContent
   if (overflowElem.getAttribute('title') !== content) {
@@ -145,4 +156,8 @@ export function triggerEvent (targetElem: Element, type: string) {
   if (targetElem) {
     targetElem.dispatchEvent(new Event(type))
   }
+}
+
+export function isNodeElement (elem: any): elem is HTMLElement {
+  return elem && elem.nodeType === 1
 }
